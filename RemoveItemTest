@@ -1,0 +1,73 @@
+package SwagLabs.SwagLabsAutomate;
+
+import java.util.concurrent.TimeUnit;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.testng.Assert;
+import org.testng.Reporter;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+public class RemoveItemTest {
+
+    private WebDriver driver;
+    Screenshot screenshots;
+    @BeforeClass(groups = {"regression"})
+    public void setUp() {
+        Logger.setupLogger();  // Initialize the logger before the test
+        driver = new ChromeDriver();
+        driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
+        driver.get("https://www.saucedemo.com/v1/index.html");
+        screenshots=new Screenshot(driver);
+    }
+
+    @Test(priority = 1,groups = {"regression"}, description = "Test removing an item from the cart after adding it.")
+    public void testRemoveItemFromCart() throws InterruptedException {
+        try {
+        	LoginMethod login= new LoginMethod(driver);
+            Logger.logInfo("Removing 'Sauce Labs Backpack' from the cart.");
+            Reporter.log("Starting the 'Remove Item from Cart' test.", true);  
+            login.logincheck("standard_user", "secret_sauce");
+            driver.findElement(By.xpath("//div[text()='Sauce Labs Backpack']")).click();
+            driver.findElement(By.xpath("(//button[normalize-space()='ADD TO CART'])[1]")).click();
+            Reporter.log("Added 'Sauce Labs Backpack' to the cart.", true); 
+            
+            // Assert that the cart badge has been updated
+            
+            WebElement cartBadge = driver.findElement(By.className("shopping_cart_badge"));
+            Assert.assertEquals(cartBadge.getText(), "1", "Cart count should be 1 after adding product.");
+            Reporter.log("Verified the cart count: 1.", true);
+            
+            // Remove the product from the cart
+            driver.findElement(By.xpath("(//button[normalize-space()='REMOVE'])[1]")).click();
+            Reporter.log("Clicked 'REMOVE' to remove the item from the cart.", true);
+            screenshots.takeScreenshot("testRemoveItemFromCart" );
+            String path="C:\\Users\\ram.jegadeesh\\eclipse-workspace\\SwagLabsAutomate\\ScreenShots\\testRemoveItemFromCart.png";
+            Reporter.log("Click here to see Screenshot'<a href='" + path+ "'>view screenshot</a>'");
+          
+            
+            
+            cartBadge = driver.findElement(By.xpath("(//*[name()='svg'][@role='img'])[1]"));
+            Assert.assertTrue(cartBadge.getText().isEmpty(), "Cart is not empty. Cart count: " + cartBadge.getText());
+            Reporter.log("Cart is empty after item removal.", true);  
+
+           
+        } catch (Exception exception) {
+            Logger.logError("Remove Item from Cart failed: " + exception.getMessage());
+            Assert.fail("Test failed due to exception: " + exception.getMessage());
+        }
+    }
+
+    @AfterClass(groups = {"regression"})
+    public void tearDown() {
+        // Close the browser after the test
+        if (driver != null) {
+            driver.quit();
+        }
+        Logger.close();  // Close the logger when the test is done
+    }
+}
