@@ -1,0 +1,275 @@
+package SwagLabs.SwagLabsAutomate;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
+import org.testng.Reporter;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+public class SauceDemo {
+
+    private WebDriver driver;
+    Screenshot screenshots;
+
+    // Set up the WebDriver instance before each test method
+    @BeforeClass
+    public void setUp() {
+        try {
+            Logger.setupLogger();  // Initialize the logger
+            Logger.logInfo("Test started. Setting up the WebDriver."); 
+            Reporter.log("Test started. Setting up the WebDriver.", true);
+            
+            driver = new ChromeDriver();
+            driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
+            driver.get("https://www.saucedemo.com/v1/index.html");
+            screenshots=new Screenshot(driver);
+            screenshots.takeScreenshot("Loadsite" );
+            Logger.logInfo("Navigated to URL: https://www.saucedemo.com/v1/index.html");
+            Reporter.log("Navigated to URL: https://www.saucedemo.com/v1/index.html", true);
+            
+        } catch (Exception exception) {
+            Logger.logError("Setup failed: " + exception.getMessage());
+            Reporter.log("Setup failed: " + exception.getMessage(), true);
+            Assert.fail("Test setup failed due to exception: " + exception.getMessage());
+        }
+    }
+
+
+    @Test(priority = 1, description = "Verify the page title to ensure the correct page is loaded.")
+    public void TitleCheck() {
+        try {
+        	Reporter.log("Verifying the page title.", true);
+            System.out.println(driver.getTitle());
+            
+            String expected = "Swag Labs";
+            String actual = driver.getTitle();
+            Assert.assertEquals(actual, expected, "Page Title mismatch. Expected: " + expected + " but got: " + actual);
+            screenshots.takeScreenshot("TitleCheck" );
+            Reporter.log("Page title verified. Title is correct.", true);
+            String path="C:\\Users\\ram.jegadeesh\\eclipse-workspace\\SwagLabsAutomate\\ScreenShots\\TitleCheck.png";
+            Reporter.log("Click here to see Screenshot'<a href='" + path + "' target='_blank'>view screenshot</a>'");
+          
+        } catch (Exception exception) {
+            Logger.logError("TitleCheck failed: " + exception.getMessage());
+            Reporter.log("TitleCheck failed: " + exception.getMessage());
+            Assert.fail("Test failed due to exception: " + exception.getMessage());
+        }
+    }
+
+   @Test(priority = 2, description = "Test the login functionality by logging in with valid credentials.")
+    public void testLogin() {
+        try {
+        	LoginMethod login=new LoginMethod(driver);
+            Logger.logInfo("Attempting to log in with username 'standard_user' and password 'secret_sauce'.");
+            Reporter.log("Attempting to log in with username 'standard_user' and password 'secret_sauce'.", true);
+//            driver.findElement(By.id("user-name")).sendKeys("standard_user");
+//            driver.findElement(By.id("password")).sendKeys("secret_sauce");
+//            driver.findElement(By.xpath("//input[@class='btn_action']")).click();
+              login.logincheck("standard_user", "secret_sauce");
+
+
+            // Verify the page URL after login
+            String expected = "https://www.saucedemo.com/v1/inventory.html";
+            String actual = driver.getCurrentUrl();
+            Assert.assertEquals(actual, expected, "Page URL mismatch. Expected: " + expected + " but got: " + actual);
+            Reporter.log("Login successful. Navigated to inventory page.", true);
+            screenshots.takeScreenshot("testLogin" );
+            String path1="C:\\Users\\ram.jegadeesh\\eclipse-workspace\\SwagLabsAutomate\\ScreenShots\\testLogin.png";
+            Reporter.log("Click here to see Screenshot'<a href='" + path1 + "' target='_blank''>view screenshot</a>'");
+            Logger.logInfo("Login successful. Page URL: " + actual);
+        } catch (Exception exception) {
+            Logger.logError("Login failed: " + exception.getMessage());
+            Reporter.log("Login failed: " + exception.getMessage(), true);
+            Assert.fail("Test failed due to exception: " + exception.getMessage());
+        }
+    }
+
+    @Test(priority = 3, dependsOnMethods = {"testLogin"}, description = "Test adding an item to the cart after a successful login.")
+    public void testAddItemToCart() {
+        try {
+            Logger.logInfo("Adding 'Sauce Labs Backpack' to the cart.");
+            Reporter.log("Adding 'Sauce Labs Backpack' to the cart.", true);
+            driver.findElement(By.xpath("//div[text()='Sauce Labs Backpack']")).click();
+            driver.findElement(By.xpath("//button[text()='ADD TO CART']")).click();
+
+            // Verify that the cart has the item
+            String cartCount = driver.findElement(By.className("shopping_cart_badge")).getText();
+            Assert.assertEquals(cartCount, "1", "Cart item count should be 1 but found: " + cartCount);
+            screenshots.takeScreenshot("AddItemToCart");
+            Logger.logInfo("Item added to cart. Cart count: " + cartCount);
+            screenshots.takeScreenshot("testAddItemToCart" );
+            String path1="C:\\Users\\ram.jegadeesh\\eclipse-workspace\\SwagLabsAutomate\\ScreenShots\\testAddItemToCart.png";
+            Reporter.log("Click here to see Screenshot'<a href='" + path1 + "' target='_blank''>view screenshot</a>'");
+            Reporter.log("Item added to cart. Cart count: " + cartCount, true);
+        } catch (Exception exception) {
+            Logger.logError("Add Item to Cart failed: " + exception.getMessage());
+            Reporter.log("Add Item to Cart failed: " + exception.getMessage(), true);
+            Assert.fail("Test failed due to exception: " + exception.getMessage());
+        }
+    }
+
+    @Test(priority = 4,dependsOnMethods = {"testAddItemToCart"}, description = "Test navigating to the shopping cart after adding an item.")
+    public void testProceedToCart() {
+        try {
+            Logger.logInfo("Proceeding to the shopping cart.");
+            Reporter.log("Proceeding to the shopping cart.", true);
+            driver.findElement(By.xpath("//*[name()='path' and contains(@fill,'currentCol')]")).click();
+            Logger.logInfo("Successfully navigated to the cart.");
+            Reporter.log("Successfully navigated to the cart.", true);
+            screenshots.takeScreenshot("testProceedToCart" );
+            String path1="C:\\Users\\ram.jegadeesh\\eclipse-workspace\\SwagLabsAutomate\\ScreenShots\\testProceedToCart.png";
+            Reporter.log("Click here to see Screenshot'<a href='" + path1 + "' target='_blank''>view screenshot</a>'");
+        } catch (Exception exception) {
+            Logger.logError("Proceed to Cart failed: " + exception.getMessage());
+            Reporter.log("Proceed to Cart failed: " + exception.getMessage(), true);
+            Assert.fail("Test failed due to exception: " + exception.getMessage());
+        }
+    }
+
+    @Test(priority = 5, dependsOnMethods = {"testProceedToCart"}, description ="Test the checkout process by entering required details." )
+    public void testCheckout() {
+        try {
+            Logger.logInfo("Entering checkout information.");
+            Reporter.log("Entering checkout information.", true);
+            driver.findElement(By.xpath("//a[text()='CHECKOUT']")).click();
+            driver.findElement(By.id("first-name")).sendKeys("Ram");
+            driver.findElement(By.id("last-name")).sendKeys("TJ");
+            driver.findElement(By.id("postal-code")).sendKeys("625009");
+            driver.findElement(By.xpath("//input[@value='CONTINUE']")).click();
+            Logger.logInfo("Checkout information entered: First Name - Ram, Last Name - TJ, Postal Code - 625009");
+            Reporter.log("Checkout information entered.", true);
+            screenshots.takeScreenshot("testCheckout" );
+            String path1="C:\\Users\\ram.jegadeesh\\eclipse-workspace\\SwagLabsAutomate\\ScreenShots\\testCheckout.png";
+            Reporter.log("Click here to see Screenshot'<a href='" + path1 + "' target='_blank''>view screenshot</a>'");
+        } catch (Exception exception) {
+            Logger.logError("Checkout failed: " + exception.getMessage());
+            Reporter.log("Checkout failed: " + exception.getMessage(), true);
+            Assert.fail("Test failed due to exception: " + exception.getMessage());
+        }
+    }
+
+    @Test(priority = 6, dependsOnMethods = {"testCheckout"}, description = "Test taking a screenshot after completing the checkout process.")
+    public void testTakeScreenshot() throws IOException {
+        try {
+            Logger.logInfo("Taking a screenshot of the booking receipt.");
+            Reporter.log("Taking a screenshot of the booking receipt.", true);
+            TakesScreenshot screenshot = (TakesScreenshot) driver;
+            File sourceFile = screenshot.getScreenshotAs(OutputType.FILE);
+            File destiny = new File("./ScreenShots/testTakeScreenshot.png");
+            FileUtils.copyFile(sourceFile, destiny);
+            Logger.logInfo("Screenshot taken and saved as 'BookingReceipt.png'.");
+            Reporter.log("Screenshot taken and saved as 'BookingReceipt.png'.", true);
+        
+            
+         } catch (Exception exception) {
+            Logger.logError("Screenshot capture failed: " + exception.getMessage());
+            Reporter.log("Screenshot capture failed: " + exception.getMessage(), true);
+            Assert.fail("Test failed due to exception: " + exception.getMessage());
+        }
+    }
+
+    @Test(priority = 7, dependsOnMethods = {"testTakeScreenshot"}, description = "Test completing the checkout process.")
+    public void testFinishCheckout() {
+        try {
+            Logger.logInfo("Finishing the checkout process.");
+            Reporter.log("Finishing the checkout process.", true);
+            driver.findElement(By.xpath("//a[text()='FINISH']")).click();
+            Logger.logInfo("Checkout process completed.");
+            Reporter.log("Checkout process completed.", true);
+            screenshots.takeScreenshot("testFinishCheckout" );
+            String path1="C:\\Users\\ram.jegadeesh\\eclipse-workspace\\SwagLabsAutomate\\ScreenShots\\testFinishCheckout.png";
+            Reporter.log("Click here to see Screenshot'<a href='" + path1 + "' target='_blank''>view screenshot</a>'");
+        
+            
+        } catch (Exception exception) {
+            Logger.logError("Finish Checkout failed: " + exception.getMessage());
+            Reporter.log("Finish Checkout failed: " + exception.getMessage(), true);
+            Assert.fail("Test failed due to exception: " + exception.getMessage());
+        }
+    }
+
+    @Test(priority = 8, dependsOnMethods = {"testLogin"},description = "Test logging out from the application.")
+    public void logout() {
+        try {
+            Logger.logInfo("Logging out from the application.");
+            Reporter.log("Logging out from the application.", true);
+            driver.findElement(By.xpath("(//button[normalize-space()='Open Menu'])[1]")).click();
+            WebElement logout = driver.findElement(By.xpath("(//a[normalize-space()='Logout'])[1]"));
+            logout.click();
+            String expected = "https://www.saucedemo.com/v1/index.html";
+            String actual = driver.getCurrentUrl();
+            Assert.assertEquals(actual, expected, "Page URL mismatch. Expected: " + expected + " but got: " + actual);
+
+            Logger.logInfo("Successfully logged out.");
+            Reporter.log("Successfully logged out.", true);
+            screenshots.takeScreenshot("logout" );
+
+            String path1="C:\\Users\\ram.jegadeesh\\eclipse-workspace\\SwagLabsAutomate\\ScreenShots\\logout.png";
+            Reporter.log("Click here to see Screenshot'<a href='" + path1 + "' target='_blank''>view screenshot</a>'");
+        
+            
+        } catch (Exception exception) {
+            Logger.logError("Logout failed: " + exception.getMessage());
+            Reporter.log("Logout failed: " + exception.getMessage(), true);
+            Assert.fail("Test failed due to exception: " + exception.getMessage());
+        }
+    }
+
+    @Test(priority = 9, dependsOnMethods = {"testLogin"},description = "Test clicking the 'About' button in the application menu and verify navigation to Sauce Labs website.")
+    public void clickAboutButton() {
+        try {
+        	
+        	Reporter.log("Clicking the 'About' button and verifying navigation.", true);
+            driver.findElement(By.id("user-name")).sendKeys("standard_user");
+            driver.findElement(By.id("password")).sendKeys("secret_sauce");
+            driver.findElement(By.xpath("//input[@class='btn_action']")).click();
+            driver.findElement(By.xpath("(//button[normalize-space()='Open Menu'])[1]")).click();
+
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));  
+            WebElement aboutButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("about_sidebar_link")));
+            aboutButton.click();
+
+            // Wait for the URL to change to the expected one
+            wait.until(ExpectedConditions.urlToBe("https://saucelabs.com/"));
+            // Validate the page URL
+            String expected = "https://saucelabs.com/";
+            String actual = driver.getCurrentUrl();
+            Assert.assertEquals(actual, expected, "Page URL mismatch. Expected: " + expected + " but got: " + actual);
+           // driver.close();
+            Reporter.log("Successfully navigated to the Sauce Labs website.", true);
+            screenshots.takeScreenshot("clickAboutButton" );
+            String path1="C:\\Users\\ram.jegadeesh\\eclipse-workspace\\SwagLabsAutomate\\ScreenShots\\clickAboutButton.png";
+            Reporter.log("Click here to see Screenshot'<a href='" + path1 + "' target='_blank''>view screenshot</a>'");
+        
+        } catch (Exception exception) {
+            Logger.logError("Click About Button failed: " + exception.getMessage());
+            Reporter.log("Click About Button failed: " + exception.getMessage(), true); 
+            Assert.fail("Test failed due to exception: " + exception.getMessage());
+        }
+    }
+
+
+  
+    @AfterClass
+    public void tearDown() {
+        Logger.logInfo("Test execution completed. Closing the browser.");
+        if (driver != null) {
+            driver.quit();
+        }
+        Logger.close(); // Close the log file
+    }
+}
